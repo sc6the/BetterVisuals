@@ -1,0 +1,15 @@
+[
+  {
+    "modid": "${id}",
+    "name": "${name}",
+    "description": "Custom hotbar and scoreboard with smooth animations and OneConfig integration.",
+    "version": "${version}",
+    "mcversion": "${mcVersionStr}",
+    "url": "",
+    "authorList": [],
+    "credits": "Based on Polyfrost REDACTION",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
