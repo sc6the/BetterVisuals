@@ -73,7 +73,7 @@ object StatusBarsRenderer {
             ghostHealth = maxOf(ghostHealth, realHp)
         }
 
-        // Layout
+        // Layouts
         val sw = UResolution.scaledWidth
         val sh = UResolution.scaledHeight
         val barH = cfg.statusBarHeight.toFloat()
