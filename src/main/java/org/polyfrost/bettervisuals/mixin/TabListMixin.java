@@ -107,15 +107,15 @@ public class TabListMixin {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
+        float r = BetterVisualsConfig.tabRadius;
         if (BetterVisualsConfig.blurEnabled) {
-            BlurUtil.INSTANCE.drawBlurredRect(bgX, bgY, bgW, bgH, BetterVisualsConfig.blurRadius);
+            BlurUtil.INSTANCE.drawBlurredRoundedRect(bgX, bgY, bgW, bgH, r, BetterVisualsConfig.blurRadius);
         }
 
-        float r = BetterVisualsConfig.tabRadius;
         Color bg = BetterVisualsConfig.tabBgColor.toJavaColor();
-        int sa = BetterVisualsConfig.tabShadow
-                ? (int) (BetterVisualsConfig.tabShadowOpacity * 255 / 100) : 0;
-        if (sa > 0) RenderUtil.INSTANCE.drawDropShadow(bgX, bgY, bgW, bgH, r, BetterVisualsConfig.shadowSpread, sa);
+        int sa = BetterVisualsConfig.tabGlow
+                ? (int) (BetterVisualsConfig.tabGlowOpacity * 255 / 100) : 0;
+        if (sa > 0) RenderUtil.INSTANCE.drawGlow(bgX, bgY, bgW, bgH, r, bg, BetterVisualsConfig.glowSpread, sa);
         RenderUtil.INSTANCE.drawRoundedRect(bgX, bgY, bgW, bgH, r, bg);
     }
 

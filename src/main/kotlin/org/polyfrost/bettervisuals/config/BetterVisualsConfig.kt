@@ -44,20 +44,61 @@ object BetterVisualsConfig : Config(
     var cornerRadius = 4
 
     @JvmField
-    @Switch(name = "Shadow", category = "Hotbar")
-    var shadowEnabled = true
+    @Switch(name = "Glow", category = "Hotbar")
+    var glowEnabled = true
 
     @JvmField
-    @Slider(name = "Shadow Opacity", category = "Hotbar", min = 0F, max = 100F)
-    var shadowOpacity = 40
+    @Slider(name = "Glow Opacity", category = "Hotbar", min = 0F, max = 100F)
+    var glowOpacity = 40
 
     @JvmField
-    @Slider(name = "Shadow Spread", category = "Hotbar", min = 4F, max = 40F)
-    var shadowSpread = 16
+    @Slider(name = "Glow Spread", category = "Hotbar", min = 4F, max = 40F)
+    var glowSpread = 16
 
     @JvmField
     @Slider(name = "Bottom Offset", category = "Hotbar", min = 0F, max = 40F)
     var bottomOffset = 4
+
+    @JvmField
+    @Slider(name = "HUD Size", category = "Hotbar", subcategory = "Size",
+        description = "Overall scale for hotbar + status bars. 1.0 = vanilla.",
+        min = 0.5F, max = 3.0F)
+    var hudScale = 1.0f
+
+    // Slot Numbers
+    @JvmField
+    @Switch(name = "Slot Numbers", category = "Hotbar", subcategory = "Slot Numbers",
+        description = "Show 1-9 in the top-right corner of each hotbar slot.")
+    var slotNumbersEnabled = false
+
+    @JvmField
+    @cc.polyfrost.oneconfig.config.annotations.Color(
+        name = "Number Color", category = "Hotbar", subcategory = "Slot Numbers")
+    var slotNumberColor: OneColor = OneColor(255, 255, 255, 255)
+
+    @JvmField
+    @Switch(name = "Number Glow", category = "Hotbar", subcategory = "Slot Numbers")
+    var slotNumberGlow = false
+
+    @JvmField
+    @cc.polyfrost.oneconfig.config.annotations.Color(
+        name = "Glow Color", category = "Hotbar", subcategory = "Slot Numbers")
+    var slotNumberGlowColor: OneColor = OneColor(60, 170, 255, 200)
+
+    @JvmField
+    @Slider(name = "Number Scale", category = "Hotbar", subcategory = "Slot Numbers",
+        min = 0.3F, max = 1.5F)
+    var slotNumberScale = 0.6f
+
+    @JvmField
+    @Slider(name = "Number X Offset", category = "Hotbar", subcategory = "Slot Numbers",
+        min = -16F, max = 16F)
+    var slotNumberX = 0
+
+    @JvmField
+    @Slider(name = "Number Y Offset", category = "Hotbar", subcategory = "Slot Numbers",
+        min = -16F, max = 16F)
+    var slotNumberY = 0
 
     @JvmField
     @Slider(name = "X Offset", category = "Hotbar", subcategory = "Position", min = -960F, max = 960F)
@@ -134,12 +175,12 @@ object BetterVisualsConfig : Config(
     var healthGhostColor: OneColor = OneColor(255, 255, 255, 120)
 
     @JvmField
-    @Switch(name = "Shadow", category = "Status Bars", subcategory = "Shadow")
-    var statusBarShadow = true
+    @Switch(name = "Glow", category = "Status Bars", subcategory = "Glow")
+    var statusBarGlow = true
 
     @JvmField
-    @Slider(name = "Shadow Opacity", category = "Status Bars", subcategory = "Shadow", min = 0F, max = 100F)
-    var statusBarShadowOpacity = 20
+    @Slider(name = "Glow Opacity", category = "Status Bars", subcategory = "Glow", min = 0F, max = 100F)
+    var statusBarGlowOpacity = 20
 
     // ===================== Blur =====================
 
@@ -188,12 +229,12 @@ object BetterVisualsConfig : Config(
     var chatRadius = 3f
 
     @JvmField
-    @Switch(name = "Shadow", category = "Chat")
-    var chatShadow = false
+    @Switch(name = "Glow", category = "Chat")
+    var chatGlow = false
 
     @JvmField
-    @Slider(name = "Shadow Opacity", category = "Chat", min = 0F, max = 100F)
-    var chatShadowOpacity = 20
+    @Slider(name = "Glow Opacity", category = "Chat", min = 0F, max = 100F)
+    var chatGlowOpacity = 20
 
     // ===================== Tab List =====================
 
@@ -210,12 +251,12 @@ object BetterVisualsConfig : Config(
     var tabRadius = 4f
 
     @JvmField
-    @Switch(name = "Shadow", category = "Tab List")
-    var tabShadow = true
+    @Switch(name = "Glow", category = "Tab List")
+    var tabGlow = true
 
     @JvmField
-    @Slider(name = "Shadow Opacity", category = "Tab List", min = 0F, max = 100F)
-    var tabShadowOpacity = 20
+    @Slider(name = "Glow Opacity", category = "Tab List", min = 0F, max = 100F)
+    var tabGlowOpacity = 20
 
     // ===================== Scoreboard =====================
 
@@ -236,12 +277,12 @@ object BetterVisualsConfig : Config(
     var scoreboardRadius = 4f
 
     @JvmField
-    @Switch(name = "Shadow", category = "Scoreboard")
-    var scoreboardShadow = true
+    @Switch(name = "Glow", category = "Scoreboard")
+    var scoreboardGlow = true
 
     @JvmField
-    @Slider(name = "Shadow Opacity", category = "Scoreboard", min = 0F, max = 100F)
-    var scoreboardShadowOpacity = 30
+    @Slider(name = "Glow Opacity", category = "Scoreboard", min = 0F, max = 100F)
+    var scoreboardGlowOpacity = 30
 
     @JvmField
     @Switch(name = "Show Score Numbers", category = "Scoreboard")
@@ -283,12 +324,20 @@ object BetterVisualsConfig : Config(
         addDependency("barColor", "enabled")
         addDependency("highlightColor", "enabled")
         addDependency("cornerRadius", "enabled")
-        addDependency("shadowEnabled", "enabled")
-        addDependency("shadowOpacity", "shadowEnabled")
-        addDependency("shadowSpread", "shadowEnabled")
+        addDependency("glowEnabled", "enabled")
+        addDependency("glowOpacity", "glowEnabled")
+        addDependency("glowSpread", "glowEnabled")
         addDependency("bottomOffset", "enabled")
         addDependency("hotbarX", "enabled")
         addDependency("hotbarY", "enabled")
+        addDependency("hudScale", "enabled")
+
+        addDependency("slotNumberColor", "slotNumbersEnabled")
+        addDependency("slotNumberGlow", "slotNumbersEnabled")
+        addDependency("slotNumberGlowColor", "slotNumberGlow")
+        addDependency("slotNumberScale", "slotNumbersEnabled")
+        addDependency("slotNumberX", "slotNumbersEnabled")
+        addDependency("slotNumberY", "slotNumbersEnabled")
 
         // Status Bars
         addDependency("statusBarHeight", "statusBarsEnabled")
@@ -306,8 +355,8 @@ object BetterVisualsConfig : Config(
         addDependency("levelColor", "statusBarsEnabled")
         addDependency("healthGhostEnabled", "statusBarsEnabled")
         addDependency("healthGhostColor", "healthGhostEnabled")
-        addDependency("statusBarShadow", "statusBarsEnabled")
-        addDependency("statusBarShadowOpacity", "statusBarShadow")
+        addDependency("statusBarGlow", "statusBarsEnabled")
+        addDependency("statusBarGlowOpacity", "statusBarGlow")
 
         // Blur
         addDependency("blurRadius", "blurEnabled")
@@ -321,21 +370,21 @@ object BetterVisualsConfig : Config(
         // Chat
         addDependency("chatBgColor", "chatEnabled")
         addDependency("chatRadius", "chatEnabled")
-        addDependency("chatShadow", "chatEnabled")
-        addDependency("chatShadowOpacity", "chatShadow")
+        addDependency("chatGlow", "chatEnabled")
+        addDependency("chatGlowOpacity", "chatGlow")
 
         // Tab List
         addDependency("tabBgColor", "tabEnabled")
         addDependency("tabRadius", "tabEnabled")
-        addDependency("tabShadow", "tabEnabled")
-        addDependency("tabShadowOpacity", "tabShadow")
+        addDependency("tabGlow", "tabEnabled")
+        addDependency("tabGlowOpacity", "tabGlow")
 
         // Scoreboard
         addDependency("scoreboardSide", "scoreboardEnabled")
         addDependency("scoreboardBgColor", "scoreboardEnabled")
         addDependency("scoreboardRadius", "scoreboardEnabled")
-        addDependency("scoreboardShadow", "scoreboardEnabled")
-        addDependency("scoreboardShadowOpacity", "scoreboardShadow")
+        addDependency("scoreboardGlow", "scoreboardEnabled")
+        addDependency("scoreboardGlowOpacity", "scoreboardGlow")
         addDependency("scoreboardNumbers", "scoreboardEnabled")
         addDependency("scoreboardX", "scoreboardEnabled")
         addDependency("scoreboardY", "scoreboardEnabled")

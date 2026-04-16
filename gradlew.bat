@@ -36,6 +36,17 @@ for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 
+@rem Prefer Azul Zulu 17+ when JAVA_HOME is unset (Polyfrost Gradle plugins require Java 17+).
+if not defined JAVA_HOME (
+    if exist "%ProgramFiles%\Zulu\zulu-21\bin\java.exe" set "JAVA_HOME=%ProgramFiles%\Zulu\zulu-21"
+)
+if not defined JAVA_HOME (
+    if exist "%ProgramFiles%\Zulu\zulu-17\bin\java.exe" set "JAVA_HOME=%ProgramFiles%\Zulu\zulu-17"
+)
+if not defined JAVA_HOME (
+    if exist "%ProgramFiles%\Zulu\zulu-17.jdk\bin\java.exe" set "JAVA_HOME=%ProgramFiles%\Zulu\zulu-17.jdk"
+)
+
 @rem Find java.exe
 if defined JAVA_HOME goto findJavaFromJavaHome
 

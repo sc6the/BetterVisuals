@@ -9,6 +9,7 @@ import net.minecraft.entity.SharedMonsterAttributes
 import org.lwjgl.opengl.GL11
 import org.polyfrost.bettervisuals.config.BetterVisualsConfig
 import org.polyfrost.bettervisuals.mixin.MinecraftAccessor
+import org.polyfrost.bettervisuals.utils.GuiScaleBypass
 import org.polyfrost.bettervisuals.utils.MathUtil
 import org.polyfrost.bettervisuals.utils.RenderUtil
 import java.awt.Color
@@ -73,9 +74,10 @@ object StatusBarsRenderer {
             ghostHealth = maxOf(ghostHealth, realHp)
         }
 
-        // Layouts
-        val sw = UResolution.scaledWidth
-        val sh = UResolution.scaledHeight
+        // Layouts — use vanilla dimensions so BV HUD isn't affected by GuiScaleMod.
+        val vanillaSr = GuiScaleBypass.wrap { ScaledResolution(Minecraft.getMinecraft()) }
+        val sw = vanillaSr.scaledWidth
+        val sh = vanillaSr.scaledHeight
         val barH = cfg.statusBarHeight.toFloat()
         val r = cfg.statusBarRadius
         val sp = cfg.statusBarSpacing.toFloat()
@@ -89,9 +91,24 @@ object StatusBarsRenderer {
         val hotbarTop = sh - 22f - cfg.bottomOffset + oy
 
         val track = cfg.trackColor.toJavaColor()
-        val sa = if (cfg.statusBarShadow) (cfg.statusBarShadowOpacity * 255 / 100).coerceIn(0, 255) else 0
+        val sa = if (cfg.statusBarGlow) (cfg.statusBarGlowOpacity * 255 / 100).coerceIn(0, 255) else 0
 
         GlStateManager.pushMatrix()
+        // Counteract GuiScaleMod's compressed ortho so BV renders at vanilla pixel size.
+        val gsMul = GuiScaleBypass.multiplier()
+        if (gsMul != 1f) {
+            val inv = 1f / gsMul
+            GlStateManager.scale(inv, inv, 1f)
+        }
+        // Apply BV's HUD scale around hotbar bottom-center pivot.
+        val hs = cfg.hudScale
+        if (hs != 1f) {
+            val px = sw / 2f
+            val py = sh.toFloat()
+            GlStateManager.translate(px, py, 0f)
+            GlStateManager.scale(hs, hs, 1f)
+            GlStateManager.translate(-px, -py, 0f)
+        }
         GlStateManager.disableDepth()
         GlStateManager.enableBlend()
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0)
@@ -124,14 +141,14 @@ object StatusBarsRenderer {
         if (player.totalArmorValue > 0) {
             topY -= sp + barH
             val armorPct = (player.totalArmorValue * 100 / 20)
-            drawBar(baseX, topY, fullW, barH, r, displayArmor.coerceIn(0f, 1f), cfg.armorColor.toJavaColor(), track, sa, "$armorPct%")
+            drawBar(baseX, topY, halfW, barH, r, displayArmor.coerceIn(0f, 1f), cfg.armorColor.toJavaColor(), track, sa, "$armorPct%")
         }
 
         // Air (if underwater)
         if (player.air < 300) {
             topY -= sp + barH
             val airPct = (player.air.coerceAtLeast(0) * 100 / 300)
-            drawBar(baseX, topY, fullW, barH, r, displayAir.coerceIn(0f, 1f), cfg.airColor.toJavaColor(), track, sa, "$airPct%")
+            drawBar(baseX, topY, halfW, barH, r, displayAir.coerceIn(0f, 1f), cfg.airColor.toJavaColor(), track, sa, "$airPct%")
         }
 
         // Level text centered on XP bar
@@ -145,6 +162,7 @@ object StatusBarsRenderer {
             fr.drawStringWithShadow(lvlStr, textX, textY, cfg.levelColor.getRGB())
         }
 
+        GL11.glDisable(GL11.GL_SCISSOR_TEST)
         GlStateManager.enableTexture2D()
         GlStateManager.enableDepth()
         GlStateManager.color(1f, 1f, 1f, 1f)
@@ -154,23 +172,36 @@ object StatusBarsRenderer {
     private fun drawBar(
         x: Float, y: Float, w: Float, h: Float, r: Float,
         fraction: Float, fillColor: Color, trackColor: Color,
-        shadowAlpha: Int, text: String? = null
+        glowAlpha: Int, text: String? = null
     ) {
-        if (shadowAlpha > 0) RenderUtil.drawDropShadow(x, y, w, h, r, BetterVisualsConfig.shadowSpread, shadowAlpha)
+        if (glowAlpha > 0) RenderUtil.drawGlow(x, y, w, h, r, fillColor, BetterVisualsConfig.glowSpread, glowAlpha)
         RenderUtil.drawRoundedRect(x, y, w, h, r, trackColor)
 
         if (fraction > 0f && fillColor.alpha > 0) {
             val mc = Minecraft.getMinecraft()
-            val sr = ScaledResolution(mc)
-            val sf = sr.scaleFactor
-            val sx = floor(x * sf).toInt()
-            val sy = floor((sr.scaledHeight - y - h) * sf).toInt()
-            val sw = ceil(w * fraction.coerceIn(0f, 1f) * sf).toInt().coerceAtLeast(1)
-            val sh = ceil(h * sf).toInt().coerceAtLeast(1)
+            // Use vanilla dims for scissor — bars draw in vanilla coord space,
+            // then hudScale transforms them around bottom-center pivot.
+            val sr = GuiScaleBypass.wrap { ScaledResolution(mc) }
+            val sfX = mc.displayWidth.toDouble() / sr.scaledWidth.toDouble()
+            val sfY = mc.displayHeight.toDouble() / sr.scaledHeight.toDouble()
+            val hs = BetterVisualsConfig.hudScale
+            val pvx = sr.scaledWidth / 2f
+            val pvy = sr.scaledHeight.toFloat()
+            val xT = (x - pvx) * hs + pvx
+            val yT = (y - pvy) * hs + pvy
+            val wT = w * hs
+            val hT = h * hs
+            val sx = floor(xT * sfX).toInt()
+            val sy = floor((sr.scaledHeight - yT - hT) * sfY).toInt()
+            val sw = ceil(wT * fraction.coerceIn(0f, 1f) * sfX).toInt().coerceAtLeast(1)
+            val sh = ceil(hT * sfY).toInt().coerceAtLeast(1)
             GL11.glEnable(GL11.GL_SCISSOR_TEST)
-            GL11.glScissor(sx, sy, sw, sh)
-            RenderUtil.drawRoundedRect(x, y, w, h, r, fillColor)
-            GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            try {
+                GL11.glScissor(sx, sy, sw, sh)
+                RenderUtil.drawRoundedRect(x, y, w, h, r, fillColor)
+            } finally {
+                GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            }
         }
 
         if (text != null) {
@@ -184,36 +215,50 @@ object StatusBarsRenderer {
         x: Float, y: Float, w: Float, h: Float, r: Float,
         fraction: Float, ghostFrac: Float,
         fillColor: Color, ghostColor: Color, trackColor: Color,
-        text: String, shadowAlpha: Int
+        text: String, glowAlpha: Int
     ) {
-        if (shadowAlpha > 0) RenderUtil.drawDropShadow(x, y, w, h, r, BetterVisualsConfig.shadowSpread, shadowAlpha)
+        if (glowAlpha > 0) RenderUtil.drawGlow(x, y, w, h, r, fillColor, BetterVisualsConfig.glowSpread, glowAlpha)
         RenderUtil.drawRoundedRect(x, y, w, h, r, trackColor)
 
         val mc = Minecraft.getMinecraft()
-        val sr = ScaledResolution(mc)
-        val sf = sr.scaleFactor
-        val sx = floor(x * sf).toInt()
-        val sy = floor((sr.scaledHeight - y - h) * sf).toInt()
-        val sh = ceil(h * sf).toInt().coerceAtLeast(1)
+        val sr = GuiScaleBypass.wrap { ScaledResolution(mc) }
+        val sfX = mc.displayWidth.toDouble() / sr.scaledWidth.toDouble()
+        val sfY = mc.displayHeight.toDouble() / sr.scaledHeight.toDouble()
+        val hs = BetterVisualsConfig.hudScale
+        val pvx = sr.scaledWidth / 2f
+        val pvy = sr.scaledHeight.toFloat()
+        val xT = (x - pvx) * hs + pvx
+        val yT = (y - pvy) * hs + pvy
+        val wT = w * hs
+        val hT = h * hs
+        val sx = floor(xT * sfX).toInt()
+        val sy = floor((sr.scaledHeight - yT - hT) * sfY).toInt()
+        val sh = ceil(hT * sfY).toInt().coerceAtLeast(1)
 
         // Ghost
         val gf = ghostFrac.coerceIn(0f, 1f)
         if (gf > 0f && ghostColor.alpha > 0) {
-            val sw = ceil(w * gf * sf).toInt().coerceAtLeast(1)
+            val sw = ceil(wT * gf * sfX).toInt().coerceAtLeast(1)
             GL11.glEnable(GL11.GL_SCISSOR_TEST)
-            GL11.glScissor(sx, sy, sw, sh)
-            RenderUtil.drawRoundedRect(x, y, w, h, r, ghostColor)
-            GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            try {
+                GL11.glScissor(sx, sy, sw, sh)
+                RenderUtil.drawRoundedRect(x, y, w, h, r, ghostColor)
+            } finally {
+                GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            }
         }
 
         // Fill
         val f = fraction.coerceIn(0f, 1f)
         if (f > 0f && fillColor.alpha > 0) {
-            val sw = ceil(w * f * sf).toInt().coerceAtLeast(1)
+            val sw = ceil(wT * f * sfX).toInt().coerceAtLeast(1)
             GL11.glEnable(GL11.GL_SCISSOR_TEST)
-            GL11.glScissor(sx, sy, sw, sh)
-            RenderUtil.drawRoundedRect(x, y, w, h, r, fillColor)
-            GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            try {
+                GL11.glScissor(sx, sy, sw, sh)
+                RenderUtil.drawRoundedRect(x, y, w, h, r, fillColor)
+            } finally {
+                GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            }
         }
 
         // Text

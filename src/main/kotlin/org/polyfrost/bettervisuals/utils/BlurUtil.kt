@@ -23,6 +23,13 @@ object BlurUtil {
     private var drawFeatherLoc = 0
     private var drawInitFailed = false
 
+    private var roundProgram = 0
+    private var roundTexLoc = 0
+    private var roundRectUVLoc = 0
+    private var roundFbSizeLoc = 0
+    private var roundRadiusLoc = 0
+    private var roundInitFailed = false
+
     private var fboH: Framebuffer? = null
     private var fboV: Framebuffer? = null
     private var lastWidth = 0
@@ -52,6 +59,27 @@ void main() {
         total += w;
     }
     gl_FragColor = col / total;
+}"""
+
+    // Rounded-rect blur shader. Works in UV space so it's immune to modelview
+    // transforms (GuiScaleMod compensation, hudScale, etc.).
+    private const val ROUND_FRAGMENT_SRC = """#version 120
+uniform sampler2D DiffuseSampler;
+uniform vec4 rectUV;     // (uMin, vMin, uMax, vMax) of rect in FBO UV space
+uniform vec2 fbSize;     // framebuffer size in pixels
+uniform float radius;    // corner radius in pixels
+void main() {
+    vec2 uv = gl_TexCoord[0].st;
+    vec4 color = texture2D(DiffuseSampler, uv);
+    vec2 center = (rectUV.xy + rectUV.zw) * 0.5;
+    vec2 halfUV = abs(rectUV.zw - rectUV.xy) * 0.5;
+    // Convert UV-space offsets to pixel space so radius stays in pixels.
+    vec2 pOffsetPx = (uv - center) * fbSize;
+    vec2 halfPx = halfUV * fbSize;
+    vec2 q = abs(pOffsetPx) - halfPx + vec2(radius);
+    float dist = min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;
+    float alpha = clamp(0.5 - dist, 0.0, 1.0);
+    gl_FragColor = vec4(color.rgb, alpha);
 }"""
 
     private const val DRAW_FRAGMENT_SRC = """#version 120
@@ -148,6 +176,45 @@ void main() {
         }
     }
 
+    private fun initRound(): Boolean {
+        if (roundProgram != 0) return true
+        if (roundInitFailed) return false
+        return try {
+            val vs = GL20.glCreateShader(GL20.GL_VERTEX_SHADER)
+            GL20.glShaderSource(vs, VERTEX_SRC)
+            GL20.glCompileShader(vs)
+            if (GL20.glGetShaderi(vs, GL20.GL_COMPILE_STATUS) == 0) {
+                GL20.glDeleteShader(vs); roundInitFailed = true; return false
+            }
+
+            val fs = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER)
+            GL20.glShaderSource(fs, ROUND_FRAGMENT_SRC)
+            GL20.glCompileShader(fs)
+            if (GL20.glGetShaderi(fs, GL20.GL_COMPILE_STATUS) == 0) {
+                GL20.glDeleteShader(vs); GL20.glDeleteShader(fs); roundInitFailed = true; return false
+            }
+
+            roundProgram = GL20.glCreateProgram()
+            GL20.glAttachShader(roundProgram, vs)
+            GL20.glAttachShader(roundProgram, fs)
+            GL20.glLinkProgram(roundProgram)
+            GL20.glDeleteShader(vs)
+            GL20.glDeleteShader(fs)
+
+            if (GL20.glGetProgrami(roundProgram, GL20.GL_LINK_STATUS) == 0) {
+                GL20.glDeleteProgram(roundProgram); roundProgram = 0; roundInitFailed = true; return false
+            }
+
+            roundTexLoc = GL20.glGetUniformLocation(roundProgram, "DiffuseSampler")
+            roundRectUVLoc = GL20.glGetUniformLocation(roundProgram, "rectUV")
+            roundFbSizeLoc = GL20.glGetUniformLocation(roundProgram, "fbSize")
+            roundRadiusLoc = GL20.glGetUniformLocation(roundProgram, "radius")
+            true
+        } catch (e: Exception) {
+            roundInitFailed = true; false
+        }
+    }
+
     private fun ensureFBOs(w: Int, h: Int) {
         if (fboH != null && lastWidth == w && lastHeight == h) return
         fboH?.deleteFramebuffer()
@@ -206,7 +273,7 @@ void main() {
         val fbo = fboV ?: return
         if (!blurReady) return
 
-        val sr = ScaledResolution(Minecraft.getMinecraft())
+        val sr = GuiScaleBypass.wrap { ScaledResolution(Minecraft.getMinecraft()) }
         val sw = sr.scaledWidth.toFloat()
         val sh = sr.scaledHeight.toFloat()
 
@@ -232,6 +299,65 @@ void main() {
         GlStateManager.disableBlend()
     }
 
+    /**
+     * Draw a rounded-corner blurred rect. Masks the blur texture to the rounded
+     * shape via an SDF fragment shader so it matches the rounded background on top.
+     * Falls back to sharp rect if the shader fails to compile.
+     */
+    fun drawBlurredRoundedRect(x: Float, y: Float, w: Float, h: Float, cornerRadius: Float, blurRadius: Float) {
+        if (blurRadius <= 0f) return
+        if (cornerRadius <= 0f) {
+            drawBlurredRect(x, y, w, h, blurRadius)
+            return
+        }
+        prepareBlur(blurRadius)
+        val fbo = fboV ?: return
+        if (!blurReady) return
+        if (!initRound()) {
+            drawBlurredRect(x, y, w, h, blurRadius)
+            return
+        }
+
+        val mc = Minecraft.getMinecraft()
+        val sr = GuiScaleBypass.wrap { ScaledResolution(mc) }
+        val sw = sr.scaledWidth.toFloat()
+        val sh = sr.scaledHeight.toFloat()
+
+        // Vanilla pixel-per-GUI-unit (radius scales with UI, not GuiScaleMod).
+        val sfX = mc.displayWidth / sw
+        val sfY = mc.displayHeight / sh
+        val radPx = cornerRadius * ((sfX + sfY) * 0.5f)
+
+        // Rect UVs into the blur FBO (top-left origin in GUI coords → UV with Y flipped).
+        val u0 = x / sw
+        val v0 = 1f - (y + h) / sh
+        val u1 = (x + w) / sw
+        val v1 = 1f - y / sh
+
+        GL20.glUseProgram(roundProgram)
+        GL20.glUniform1i(roundTexLoc, 0)
+        GL20.glUniform4f(roundRectUVLoc, u0, v0, u1, v1)
+        GL20.glUniform2f(roundFbSizeLoc, mc.displayWidth.toFloat(), mc.displayHeight.toFloat())
+        GL20.glUniform1f(roundRadiusLoc, radPx)
+
+        GlStateManager.enableTexture2D()
+        GlStateManager.enableBlend()
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0)
+        GlStateManager.color(1f, 1f, 1f, 1f)
+        GlStateManager.bindTexture(fbo.framebufferTexture)
+
+        val wr = Tessellator.getInstance().worldRenderer
+        wr.begin(7, DefaultVertexFormats.POSITION_TEX)
+        wr.pos(x.toDouble(), (y + h).toDouble(), 0.0).tex(u0.toDouble(), v0.toDouble()).endVertex()
+        wr.pos((x + w).toDouble(), (y + h).toDouble(), 0.0).tex(u1.toDouble(), v0.toDouble()).endVertex()
+        wr.pos((x + w).toDouble(), y.toDouble(), 0.0).tex(u1.toDouble(), v1.toDouble()).endVertex()
+        wr.pos(x.toDouble(), y.toDouble(), 0.0).tex(u0.toDouble(), v1.toDouble()).endVertex()
+        Tessellator.getInstance().draw()
+
+        GL20.glUseProgram(0)
+        GlStateManager.disableBlend()
+    }
+
     fun drawBlurredRectFeathered(x: Float, y: Float, w: Float, h: Float, blurRadius: Float, feather: Float) {
         if (blurRadius <= 0f) return
         prepareBlur(blurRadius)
@@ -242,7 +368,7 @@ void main() {
             return
         }
 
-        val sr = ScaledResolution(Minecraft.getMinecraft())
+        val sr = GuiScaleBypass.wrap { ScaledResolution(Minecraft.getMinecraft()) }
         val sw = sr.scaledWidth.toFloat()
         val sh = sr.scaledHeight.toFloat()
         val f = feather.coerceAtLeast(0.5f)

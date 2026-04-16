@@ -114,6 +114,35 @@ esac
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
+# Prefer Azul Zulu 17+ when JAVA_HOME is unset (Polyfrost Gradle plugins require Java 17+).
+if [ -z "$JAVA_HOME" ] ; then
+    if [ "$darwin" = true ] ; then
+        for zulu_home in \
+            /Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home \
+            /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+        do
+            if [ -x "$zulu_home/bin/java" ] ; then
+                JAVA_HOME=$zulu_home
+                break
+            fi
+        done
+    else
+        for zulu_home in \
+            /usr/lib/jvm/zulu-21-amd64 \
+            /usr/lib/jvm/zulu-17-amd64 \
+            /usr/lib/jvm/zulu-21 \
+            /usr/lib/jvm/zulu-17 \
+            "/c/Program Files/Zulu/zulu-21" \
+            "/c/Program Files/Zulu/zulu-17" \
+            "/c/Program Files/Zulu/zulu-17.jdk"
+        do
+            if [ -x "$zulu_home/bin/java" ] ; then
+                JAVA_HOME=$zulu_home
+                break
+            fi
+        done
+    fi
+fi
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then

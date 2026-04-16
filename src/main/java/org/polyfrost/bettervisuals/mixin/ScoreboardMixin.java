@@ -86,11 +86,11 @@ public abstract class ScoreboardMixin {
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 
         if (BetterVisualsConfig.blurEnabled) {
-            BlurUtil.INSTANCE.drawBlurredRect(bgX, bgY, bgW, bgH, BetterVisualsConfig.blurRadius);
+            BlurUtil.INSTANCE.drawBlurredRoundedRect(bgX, bgY, bgW, bgH, r, BetterVisualsConfig.blurRadius);
         }
-        if (BetterVisualsConfig.scoreboardShadow) {
-            int sa = (int) (BetterVisualsConfig.scoreboardShadowOpacity * 255 / 100);
-            if (sa > 0) RenderUtil.INSTANCE.drawDropShadow(bgX, bgY, bgW, bgH, r, BetterVisualsConfig.shadowSpread, sa);
+        if (BetterVisualsConfig.scoreboardGlow) {
+            int sa = (int) (BetterVisualsConfig.scoreboardGlowOpacity * 255 / 100);
+            if (sa > 0) RenderUtil.INSTANCE.drawGlow(bgX, bgY, bgW, bgH, r, bg, BetterVisualsConfig.glowSpread, sa);
         }
         RenderUtil.INSTANCE.drawRoundedRect(bgX, bgY, bgW, bgH, r, bg);
 

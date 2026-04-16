@@ -90,21 +90,17 @@ public abstract class ChatMixin extends Gui {
         if (BetterVisualsConfig.blurEnabled) {
             // Blur needs screen-space coords — convert from chat-local to GUI coords
             float chatScale = getChatScale();
-            float sx = 2f + bx * chatScale;
-            float sy = (mc.displayHeight / (float) new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor())
-                    - 20f + by * chatScale;
-            // Approximate: use ScaledResolution for proper conversion
             net.minecraft.client.gui.ScaledResolution sr = new net.minecraft.client.gui.ScaledResolution(mc);
             float srH = sr.getScaledHeight();
-            sx = 2f + bx * chatScale;
-            sy = srH - 20f + by * chatScale;
-            BlurUtil.INSTANCE.drawBlurredRect(sx, sy, bw * chatScale, bh * chatScale,
-                    BetterVisualsConfig.blurRadius);
+            float sx = 2f + bx * chatScale;
+            float sy = srH - 20f + by * chatScale;
+            BlurUtil.INSTANCE.drawBlurredRoundedRect(sx, sy, bw * chatScale, bh * chatScale,
+                    r * chatScale, BetterVisualsConfig.blurRadius);
         }
 
-        int sa = BetterVisualsConfig.chatShadow ?
-                (int) (BetterVisualsConfig.chatShadowOpacity * 255 / 100 * alphaScale) : 0;
-        if (sa > 0) RenderUtil.INSTANCE.drawDropShadow(bx, by, bw, bh, r, BetterVisualsConfig.shadowSpread, sa);
+        int sa = BetterVisualsConfig.chatGlow ?
+                (int) (BetterVisualsConfig.chatGlowOpacity * 255 / 100 * alphaScale) : 0;
+        if (sa > 0) RenderUtil.INSTANCE.drawGlow(bx, by, bw, bh, r, adjBg, BetterVisualsConfig.glowSpread, sa);
         RenderUtil.INSTANCE.drawRoundedRect(bx, by, bw, bh, r, adjBg);
         bettervisuals$bgDrawn = true;
     }

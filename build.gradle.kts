@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage", "PropertyName")
 
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.polyfrost.gradle.util.noServerRunConfigs
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
@@ -12,6 +14,14 @@ plugins {
     id("com.github.johnrengelman.shadow")
     id("net.kyori.blossom") version "1.3.2"
     java
+}
+
+java {
+    toolchain {
+        // Match Kotlin jvmTarget (1.8) for MC 1.8.9; Gradle daemon still uses JDK 17+.
+        languageVersion.set(JavaLanguageVersion.of(8))
+        vendor.set(JvmVendorSpec.AZUL)
+    }
 }
 
 val mod_name: String by project

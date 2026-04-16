@@ -26,9 +26,9 @@ Config is saved to disk and synced with OneConfig; changes can be persisted auto
 | Command | Action |
 |---------|--------|
 | `/bettervisuals` or `/bv` | Open the OneConfig GUI |
-| `/bettervisuals save` | Save settings to file |
-| `/bettervisuals load` | Load settings from file |
-| `/bettervisuals debug` | Print config path and debug info in chat |
+| `/bv save` | Save settings to file |
+| `/bv load` | Load settings from file |
+| `/bv debug` | Print config path and debug info in chat |
 
 ## Building
 
