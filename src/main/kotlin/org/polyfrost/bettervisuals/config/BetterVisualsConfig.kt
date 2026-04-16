@@ -43,15 +43,15 @@ object BetterVisualsConfig : Config(
     var cornerRadius = 4
 
     @JvmField
-    @Switch(name = "Glow", category = "Hotbar")
+    @Switch(name = "Shadow", category = "Hotbar")
     var glowEnabled = true
 
     @JvmField
-    @Slider(name = "Glow Opacity", category = "Hotbar", min = 0F, max = 100F)
+    @Slider(name = "Shadow Opacity", category = "Hotbar", min = 0F, max = 100F)
     var glowOpacity = 40
 
     @JvmField
-    @Slider(name = "Glow Spread", category = "Hotbar", min = 4F, max = 40F)
+    @Slider(name = "Shadow Spread", category = "Hotbar", min = 4F, max = 40F)
     var glowSpread = 16
 
     @JvmField
@@ -76,12 +76,12 @@ object BetterVisualsConfig : Config(
     var slotNumberColor: OneColor = OneColor(255, 255, 255, 255)
 
     @JvmField
-    @Switch(name = "Number Glow", category = "Hotbar", subcategory = "Slot Numbers")
+    @Switch(name = "Number Shadow", category = "Hotbar", subcategory = "Slot Numbers")
     var slotNumberGlow = false
 
     @JvmField
     @cc.polyfrost.oneconfig.config.annotations.Color(
-        name = "Glow Color", category = "Hotbar", subcategory = "Slot Numbers")
+        name = "Shadow Color", category = "Hotbar", subcategory = "Slot Numbers")
     var slotNumberGlowColor: OneColor = OneColor(60, 170, 255, 200)
 
     @JvmField
