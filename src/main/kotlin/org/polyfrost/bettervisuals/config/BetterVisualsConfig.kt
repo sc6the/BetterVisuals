@@ -2,7 +2,6 @@ package org.polyfrost.bettervisuals.config
 
 import cc.polyfrost.oneconfig.config.Config
 import cc.polyfrost.oneconfig.config.annotations.Checkbox
-import cc.polyfrost.oneconfig.config.annotations.Dropdown
 import cc.polyfrost.oneconfig.config.annotations.Slider
 import cc.polyfrost.oneconfig.config.annotations.Switch
 import cc.polyfrost.oneconfig.config.core.OneColor
@@ -214,88 +213,6 @@ object BetterVisualsConfig : Config(
     @Slider(name = "Held Item Y Offset", category = "Hotbar", subcategory = "Held Item", min = -100F, max = 100F)
     var heldItemY = 0
 
-    // ===================== Chat =====================
-
-    @JvmField
-    @Switch(name = "Custom Chat", category = "Chat")
-    var chatEnabled = true
-
-    @JvmField
-    @cc.polyfrost.oneconfig.config.annotations.Color(name = "Background Color", category = "Chat")
-    var chatBgColor: OneColor = OneColor(0, 0, 0, 128)
-
-    @JvmField
-    @Slider(name = "Corner Radius", category = "Chat", min = 0F, max = 8F)
-    var chatRadius = 3f
-
-    @JvmField
-    @Switch(name = "Glow", category = "Chat")
-    var chatGlow = false
-
-    @JvmField
-    @Slider(name = "Glow Opacity", category = "Chat", min = 0F, max = 100F)
-    var chatGlowOpacity = 20
-
-    // ===================== Tab List =====================
-
-    @JvmField
-    @Switch(name = "Custom Tab List", category = "Tab List")
-    var tabEnabled = true
-
-    @JvmField
-    @cc.polyfrost.oneconfig.config.annotations.Color(name = "Background Color", category = "Tab List")
-    var tabBgColor: OneColor = OneColor(0, 0, 0, 80)
-
-    @JvmField
-    @Slider(name = "Corner Radius", category = "Tab List", min = 0F, max = 8F)
-    var tabRadius = 4f
-
-    @JvmField
-    @Switch(name = "Glow", category = "Tab List")
-    var tabGlow = true
-
-    @JvmField
-    @Slider(name = "Glow Opacity", category = "Tab List", min = 0F, max = 100F)
-    var tabGlowOpacity = 20
-
-    // ===================== Scoreboard =====================
-
-    @JvmField
-    @Switch(name = "Custom Scoreboard", category = "Scoreboard")
-    var scoreboardEnabled = true
-
-    @JvmField
-    @Dropdown(name = "Side", category = "Scoreboard", options = ["Right", "Left"])
-    var scoreboardSide = 0
-
-    @JvmField
-    @cc.polyfrost.oneconfig.config.annotations.Color(name = "Background Color", category = "Scoreboard")
-    var scoreboardBgColor: OneColor = OneColor(0, 0, 0, 80)
-
-    @JvmField
-    @Slider(name = "Corner Radius", category = "Scoreboard", min = 0F, max = 8F)
-    var scoreboardRadius = 4f
-
-    @JvmField
-    @Switch(name = "Glow", category = "Scoreboard")
-    var scoreboardGlow = true
-
-    @JvmField
-    @Slider(name = "Glow Opacity", category = "Scoreboard", min = 0F, max = 100F)
-    var scoreboardGlowOpacity = 30
-
-    @JvmField
-    @Switch(name = "Show Score Numbers", category = "Scoreboard")
-    var scoreboardNumbers = false
-
-    @JvmField
-    @Slider(name = "X Offset", category = "Scoreboard", subcategory = "Position", min = -960F, max = 960F)
-    var scoreboardX = 0
-
-    @JvmField
-    @Slider(name = "Y Offset", category = "Scoreboard", subcategory = "Position", min = -540F, max = 540F)
-    var scoreboardY = 0
-
     fun saveSettings(): Boolean {
         return ConfigPersistence.saveConfig(this)
     }
@@ -366,27 +283,5 @@ object BetterVisualsConfig : Config(
         addDependency("heldItemRadius", "heldItemBg")
         addDependency("heldItemX", "enabled")
         addDependency("heldItemY", "enabled")
-
-        // Chat
-        addDependency("chatBgColor", "chatEnabled")
-        addDependency("chatRadius", "chatEnabled")
-        addDependency("chatGlow", "chatEnabled")
-        addDependency("chatGlowOpacity", "chatGlow")
-
-        // Tab List
-        addDependency("tabBgColor", "tabEnabled")
-        addDependency("tabRadius", "tabEnabled")
-        addDependency("tabGlow", "tabEnabled")
-        addDependency("tabGlowOpacity", "tabGlow")
-
-        // Scoreboard
-        addDependency("scoreboardSide", "scoreboardEnabled")
-        addDependency("scoreboardBgColor", "scoreboardEnabled")
-        addDependency("scoreboardRadius", "scoreboardEnabled")
-        addDependency("scoreboardGlow", "scoreboardEnabled")
-        addDependency("scoreboardGlowOpacity", "scoreboardGlow")
-        addDependency("scoreboardNumbers", "scoreboardEnabled")
-        addDependency("scoreboardX", "scoreboardEnabled")
-        addDependency("scoreboardY", "scoreboardEnabled")
     }
 }

@@ -7,11 +7,8 @@
     "maxShiftBy": 5
   },
   "client": [
-    "ChatMixin",
     "GuiIngameMixin",
-    "MinecraftAccessor",
-    "ScoreboardMixin",
-    "TabListMixin"
+    "MinecraftAccessor"
   ],
   "verbose": true
 }

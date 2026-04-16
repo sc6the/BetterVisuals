@@ -1,6 +1,6 @@
 # BetterVisuals
 
-Minecraft **1.8.9 Forge** client mod: a cleaner, animated HUD with a customizable hotbar, status bars, chat, tab list, and scoreboard. Settings live in [**OneConfig**](https://github.com/Polyfrost/OneConfig).
+Minecraft **1.8.9 Forge** client mod: a cleaner, animated HUD with a customizable hotbar and status bars. Settings live in [**OneConfig**](https://github.com/Polyfrost/OneConfig).
 
 Inspired by Polyfrost tooling (credits in `mcmod.info`).
 
@@ -15,9 +15,6 @@ Inspired by Polyfrost tooling (credits in `mcmod.info`).
 |------|----------------|
 | **Hotbar** | Custom bar, animation speed, snapping, colors, corner radius, glow, position offsets, optional blur behind UI, held-item background |
 | **Status bars** | Health, armor, hunger, XP, air, level colors; ghost health bar; spacing, height, animation; glows |
-| **Chat** | please dont use |
-| **Tab list** | please dont use |
-| **Scoreboard** | please dont use |
 
 Config is saved to disk and synced with OneConfig; changes can be persisted automatically.
 
