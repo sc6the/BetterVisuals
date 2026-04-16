@@ -15,9 +15,9 @@ Inspired by Polyfrost tooling (credits in `mcmod.info`).
 |------|----------------|
 | **Hotbar** | Custom bar, animation speed, snapping, colors, corner radius, glow, position offsets, optional blur behind UI, held-item background |
 | **Status bars** | Health, armor, hunger, XP, air, level colors; ghost health bar; spacing, height, animation; glows |
-| **Chat** | Rounded background, optional glow |
-| **Tab list** | Background styling, radius, glow |
-| **Scoreboard** | Left/right side, background, radius, optional score numbers, position offsets, glow |
+| **Chat** | please dont use |
+| **Tab list** | please dont use |
+| **Scoreboard** | please dont use |
 
 Config is saved to disk and synced with OneConfig; changes can be persisted automatically.
 
