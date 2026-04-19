@@ -1,7 +1,6 @@
 package org.polyfrost.bettervisuals.config
 
 import cc.polyfrost.oneconfig.config.Config
-import cc.polyfrost.oneconfig.config.annotations.Button
 import cc.polyfrost.oneconfig.config.annotations.Checkbox
 import cc.polyfrost.oneconfig.config.annotations.Slider
 import cc.polyfrost.oneconfig.config.annotations.Switch
@@ -288,15 +287,6 @@ object BetterVisualsConfig : Config(
         // Misc
         addDependency("handFOV", "customHandFOV")
 
-        // SkinForce
-        addDependency("skinSlim", "skinForce")
-        addDependency("selectSkin", "skinForce")
-        addListener("skinSlim") {
-            org.polyfrost.bettervisuals.features.SkinForceManager.refresh()
-        }
-        addListener("skinForce") {
-            org.polyfrost.bettervisuals.features.SkinForceManager.refresh()
-        }
     }
 
     // ===================== Misc (ported from REDACTION) =====================
@@ -339,43 +329,8 @@ object BetterVisualsConfig : Config(
     var hideArmor = false
 
     @JvmField
-    @Switch(name = "No Nicknames", category = "Misc",
-        description = "Hides nameplates above players' and entities' heads.")
-    var noNicknames = false
+    @Switch(name = "1.7 Hitreg", category = "Misc",
+        description = "Updates head position on mouse move so hits register with the post-move rotation (ProjectL).")
+    var oldHitReg = false
 
-    // ===================== SkinForce =====================
-
-    @JvmField
-    @Switch(name = "SkinForce", category = "SkinForce",
-        description = "Override your own skin locally with a PNG file.")
-    var skinForce = false
-
-    @JvmField
-    @Switch(name = "Slim Model", category = "SkinForce",
-        description = "Use the slim (3px arm) model. Off = classic (4px) model.")
-    var skinSlim = false
-
-    @JvmField
-    var skinFilePath: String = ""
-
-    @JvmField
-    @Button(name = "Skin File", text = "Browse...", category = "SkinForce",
-        description = "Select a 64x64 PNG to use as your local skin.")
-    var selectSkin: Runnable = Runnable {
-        Thread({
-            try {
-                val chooser = javax.swing.JFileChooser()
-                chooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("PNG images", "png")
-                chooser.dialogTitle = "Select Skin PNG"
-                val parent: java.awt.Frame? = null
-                if (chooser.showOpenDialog(parent) == javax.swing.JFileChooser.APPROVE_OPTION) {
-                    val f = chooser.selectedFile ?: return@Thread
-                    skinFilePath = f.absolutePath
-                    org.polyfrost.bettervisuals.features.SkinForceManager.loadSkin(skinFilePath)
-                    save()
-                }
-            } catch (_: Throwable) {
-            }
-        }, "BV-SkinChooser").start()
-    }
 }

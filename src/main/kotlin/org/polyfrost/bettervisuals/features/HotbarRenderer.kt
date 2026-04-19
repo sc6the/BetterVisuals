@@ -98,14 +98,12 @@ object HotbarRenderer {
 
         if (bg.alpha != 0) {
             if (cfg.blurEnabled) BlurUtil.drawBlurredRoundedRect(barBgX, barY, 182f, 22f, r, cfg.blurRadius)
-            RenderUtil.drawBlackShadow(barBgX, barY, 182f, 22f, r, cfg.glowSpread, 80)
-            if (cfg.glowEnabled) RenderUtil.drawGlow(barBgX, barY, 182f, 22f, r, bg, cfg.glowSpread, sa)
+            if (cfg.glowEnabled) RenderUtil.drawMatchedGlow(barBgX, barY, 182f, 22f, r, bg, cfg.glowSpread, sa.coerceAtLeast(1))
             RenderUtil.drawRoundedRect(barBgX, barY, 182f, 22f, r, bg)
         }
 
         if (hl.alpha != 0) {
-            RenderUtil.drawBlackShadow(highlightX, barY, 22f, 22f, r, (cfg.glowSpread * 0.6f).toInt().coerceAtLeast(4), 80)
-            if (cfg.glowEnabled) RenderUtil.drawGlow(highlightX, barY, 22f, 22f, r, hl, (cfg.glowSpread * 0.6f).toInt().coerceAtLeast(4), (sa * 0.7f).toInt())
+            if (cfg.glowEnabled) RenderUtil.drawMatchedGlow(highlightX, barY, 22f, 22f, r, hl, (cfg.glowSpread * 0.6f).toInt().coerceAtLeast(4), (sa * 0.7f).toInt().coerceAtLeast(1))
             RenderUtil.drawRoundedRect(highlightX, barY, 22f, 22f, r, hl)
         }
 

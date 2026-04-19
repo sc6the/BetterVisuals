@@ -15,10 +15,10 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import org.polyfrost.bettervisuals.config.BetterVisualsConfig
+import org.polyfrost.bettervisuals.features.HitRegHandler
 import org.polyfrost.bettervisuals.features.HotbarRenderer
 import org.polyfrost.bettervisuals.features.NoCreativeDriftHandler
 import org.polyfrost.bettervisuals.features.ServerManager
-import org.polyfrost.bettervisuals.features.SkinForceManager
 import org.polyfrost.bettervisuals.features.StatusBarsEventHandler
 import org.polyfrost.bettervisuals.utils.ConfigPersistence
 import java.util.concurrent.atomic.AtomicBoolean
@@ -66,6 +66,7 @@ object BetterVisuals {
         EVENT_BUS.register(StatusBarsEventHandler())
         EVENT_BUS.register(ServerManager)
         EVENT_BUS.register(NoCreativeDriftHandler)
+        EVENT_BUS.register(HitRegHandler)
         ServerManager.initialize()
         ClientCommandHandler.instance.registerCommand(BvCommand)
     }
@@ -74,7 +75,6 @@ object BetterVisuals {
     fun onLoadComplete(@Suppress("UNUSED_PARAMETER") event: FMLLoadCompleteEvent) {
         BetterVisualsConfig.loadSettings()
         HotbarRenderer.initialize()
-        SkinForceManager.ensureLoaded()
     }
 
     @Mod.EventHandler

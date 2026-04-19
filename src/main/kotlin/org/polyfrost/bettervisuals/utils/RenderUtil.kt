@@ -110,6 +110,51 @@ object RenderUtil {
     }
 
     /**
+     * Glow whose hue tracks the element: dark → black shadow, light → white halo,
+     * colored → saturated color halo. Matches the element's luma direction instead
+     * of inverting it like [drawGlow] does.
+     */
+    fun drawMatchedGlow(x: Float, y: Float, w: Float, h: Float, r: Float, bgColor: Color, layers: Int = 16, baseAlpha: Int = 30) {
+        if (baseAlpha <= 0) return
+        val n = layers.coerceAtLeast(1)
+        val glow = deriveMatchedGlowColor(bgColor)
+        val outerFloor = max(2, min(12, (baseAlpha * 0.25f).roundToInt()))
+        for (i in n downTo 1) {
+            val spread = i * 0.5f
+            val depth = (i - 1f) / n
+            val falloff = 1f - depth
+            val linear = baseAlpha * falloff * falloff
+            var a = linear.roundToInt().coerceIn(0, 255)
+            if (depth >= 0.5f && a < outerFloor) a = outerFloor
+            if (a <= 0) continue
+            drawRoundedRect(
+                x - spread, y - spread, w + spread * 2, h + spread * 2,
+                r + spread * 0.6f,
+                Color(glow.red, glow.green, glow.blue, a)
+            )
+        }
+    }
+
+    private fun deriveMatchedGlowColor(bg: Color): Color {
+        val r = bg.red
+        val g = bg.green
+        val b = bg.blue
+        val mx = max(r, max(g, b))
+        val mn = min(r, min(g, b))
+        val chroma = mx - mn
+        if (chroma < 24) {
+            val luma = (r * 0.299f + g * 0.587f + b * 0.114f).toInt()
+            return if (luma < 128) Color(0, 0, 0) else Color(255, 255, 255)
+        }
+        if (mx == 0) return Color(0, 0, 0)
+        val scale = 255f / mx
+        val nr = (r * scale).roundToInt().coerceIn(0, 255)
+        val ng = (g * scale).roundToInt().coerceIn(0, 255)
+        val nb = (b * scale).roundToInt().coerceIn(0, 255)
+        return Color(nr, ng, nb)
+    }
+
+    /**
      * Pure-black drop shadow. Unlike [drawGlow], never shifts to a bg-derived hue —
      * used where a consistent shadow is desired regardless of element color.
      */

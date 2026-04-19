@@ -15,14 +15,14 @@ Inspired by Polyfrost tooling (credits in `mcmod.info`).
 |------|----------------|
 | **Hotbar** | Custom bar, animation speed, snapping, colors, corner radius, shadow, position offsets, optional blur behind UI, held-item background |
 | **Status bars** | Health, armor, hunger, XP, air, level colors; ghost health bar; spacing, height, animation; glows |
-| **Misc** | Disable Hand Item Lighting, Custom Hand Item FOV, Server Preview in Direct Connect, Last Server Joined Button, No Creative Drift, Hide Armor, No Nicknames |
-| **SkinForce** | Override your own skin locally with a PNG file, switchable between classic and slim models; auto-refreshes on select and model change |
+| **Misc** | Disable Hand Item Lighting, Custom Hand Item FOV, Server Preview in Direct Connect, Last Server Joined Button, No Creative Drift, Hide Armor |
 
 ### Credits
 
 - Disable Hand Item Lighting, Custom Hand Item FOV, Server Preview in Direct Connect, and Last Server Joined Button are ported from [Polyfrost/REDACTION](https://github.com/Polyfrost/REDACTION).
 - No Creative Drift is inspired by [darkpred/NoCreativeDrift](https://github.com/darkpred/NoCreativeDrift).
-- Hide Armor and No Nicknames are re-implementations of widely available QoL mods of the same name.
+- Hide Armor is a re-implementation of a widely available QoL mod of the same name.
+- 1.7 Hitreg is a reimplementation of [ProjectL](https://www.curseforge.com/minecraft/mc-mods/projectl) by OrangeMarshall.
 
 Config is saved to disk and synced with OneConfig; changes can be persisted automatically.
 
