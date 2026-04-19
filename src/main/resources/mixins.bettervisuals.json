@@ -7,8 +7,16 @@
     "maxShiftBy": 5
   },
   "client": [
+    "AbstractClientPlayerMixin",
+    "EntityRendererMixin",
+    "EntityRendererMixin_OptiFine",
     "GuiIngameMixin",
-    "MinecraftAccessor"
+    "GuiMainMenuMixin",
+    "GuiScreenServerListMixin",
+    "LayerArmorBaseMixin",
+    "MinecraftAccessor",
+    "RenderItemMixin",
+    "RendererLivingEntityMixin"
   ],
   "verbose": true
 }

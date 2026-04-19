@@ -109,6 +109,27 @@ object RenderUtil {
         }
     }
 
+    /**
+     * Pure-black drop shadow. Unlike [drawGlow], never shifts to a bg-derived hue —
+     * used where a consistent shadow is desired regardless of element color.
+     */
+    fun drawBlackShadow(x: Float, y: Float, w: Float, h: Float, r: Float, layers: Int = 16, baseAlpha: Int = 80) {
+        if (baseAlpha <= 0) return
+        val n = layers.coerceAtLeast(1)
+        for (i in n downTo 1) {
+            val spread = i * 0.5f
+            val depth = (i - 1f) / n
+            val falloff = 1f - depth
+            val a = (baseAlpha * falloff * falloff).roundToInt().coerceIn(0, 255)
+            if (a <= 0) continue
+            drawRoundedRect(
+                x - spread, y - spread, w + spread * 2, h + spread * 2,
+                r + spread * 0.6f,
+                Color(0, 0, 0, a)
+            )
+        }
+    }
+
     private fun deriveGlowColor(bg: Color): Color {
         val r = bg.red
         val g = bg.green

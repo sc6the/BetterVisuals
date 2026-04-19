@@ -59,6 +59,7 @@ loom {
     if (project.platform.isForge) {
         forge {
             mixinConfig("mixins.${mod_id}.json")
+            accessTransformer(rootProject.file("src/main/resources/bettervisuals_at.cfg"))
         }
     }
     mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
@@ -157,7 +158,8 @@ tasks {
                 "ForceLoadAsMod" to true,
                 "TweakOrder" to "0",
                 "MixinConfigs" to "mixins.${mod_id}.json",
-                "TweakClass" to "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker"
+                "TweakClass" to "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker",
+                "FMLAT" to "bettervisuals_at.cfg"
             )
         }
         dependsOn(shadowJar)

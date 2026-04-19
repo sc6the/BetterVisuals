@@ -6,8 +6,10 @@ import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.client.shader.Framebuffer
+import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
+import java.nio.FloatBuffer
 
 object BlurUtil {
 
@@ -29,6 +31,17 @@ object BlurUtil {
     private var roundFbSizeLoc = 0
     private var roundRadiusLoc = 0
     private var roundInitFailed = false
+
+    private val mvBuf: FloatBuffer = BufferUtils.createFloatBuffer(16)
+
+    private data class Xform(val sx: Float, val sy: Float, val tx: Float, val ty: Float)
+
+    private fun readModelview(): Xform {
+        mvBuf.clear()
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, mvBuf)
+        // Column-major; diagonal = scale, [12/13] = translate (for scale+translate only)
+        return Xform(mvBuf.get(0), mvBuf.get(5), mvBuf.get(12), mvBuf.get(13))
+    }
 
     private var fboH: Framebuffer? = null
     private var fboV: Framebuffer? = null
@@ -269,7 +282,9 @@ void main() {
 
     fun drawBlurredRect(x: Float, y: Float, w: Float, h: Float, blurRadius: Float) {
         if (blurRadius <= 0f) return
-        prepareBlur(blurRadius)
+        val mv = readModelview()
+        val scaleAvg = (Math.abs(mv.sx) + Math.abs(mv.sy)) * 0.5f
+        prepareBlur(blurRadius * scaleAvg.coerceAtLeast(0.0001f))
         val fbo = fboV ?: return
         if (!blurReady) return
 
@@ -277,10 +292,16 @@ void main() {
         val sw = sr.scaledWidth.toFloat()
         val sh = sr.scaledHeight.toFloat()
 
-        val u0 = x / sw
-        val v0 = 1f - (y + h) / sh
-        val u1 = (x + w) / sw
-        val v1 = 1f - y / sh
+        // Effective on-screen rect after current modelview (scale+translate).
+        val ex = x * mv.sx + mv.tx
+        val ey = y * mv.sy + mv.ty
+        val ew = w * mv.sx
+        val eh = h * mv.sy
+
+        val u0 = ex / sw
+        val v0 = 1f - (ey + eh) / sh
+        val u1 = (ex + ew) / sw
+        val v1 = 1f - ey / sh
 
         GlStateManager.enableTexture2D()
         GlStateManager.enableBlend()
@@ -310,7 +331,9 @@ void main() {
             drawBlurredRect(x, y, w, h, blurRadius)
             return
         }
-        prepareBlur(blurRadius)
+        val mv = readModelview()
+        val scaleAvg = (Math.abs(mv.sx) + Math.abs(mv.sy)) * 0.5f
+        prepareBlur(blurRadius * scaleAvg.coerceAtLeast(0.0001f))
         val fbo = fboV ?: return
         if (!blurReady) return
         if (!initRound()) {
@@ -323,16 +346,23 @@ void main() {
         val sw = sr.scaledWidth.toFloat()
         val sh = sr.scaledHeight.toFloat()
 
-        // Vanilla pixel-per-GUI-unit (radius scales with UI, not GuiScaleMod).
+        // Vanilla pixel-per-GUI-unit, then compensate for modelview scale so the
+        // rounded mask matches the on-screen rect after hudScale.
         val sfX = mc.displayWidth / sw
         val sfY = mc.displayHeight / sh
-        val radPx = cornerRadius * ((sfX + sfY) * 0.5f)
+        val radPx = cornerRadius * ((sfX + sfY) * 0.5f) * scaleAvg
+
+        // Effective on-screen rect after current modelview (scale+translate).
+        val ex = x * mv.sx + mv.tx
+        val ey = y * mv.sy + mv.ty
+        val ew = w * mv.sx
+        val eh = h * mv.sy
 
         // Rect UVs into the blur FBO (top-left origin in GUI coords → UV with Y flipped).
-        val u0 = x / sw
-        val v0 = 1f - (y + h) / sh
-        val u1 = (x + w) / sw
-        val v1 = 1f - y / sh
+        val u0 = ex / sw
+        val v0 = 1f - (ey + eh) / sh
+        val u1 = (ex + ew) / sw
+        val v1 = 1f - ey / sh
 
         GL20.glUseProgram(roundProgram)
         GL20.glUniform1i(roundTexLoc, 0)
@@ -360,7 +390,9 @@ void main() {
 
     fun drawBlurredRectFeathered(x: Float, y: Float, w: Float, h: Float, blurRadius: Float, feather: Float) {
         if (blurRadius <= 0f) return
-        prepareBlur(blurRadius)
+        val mv = readModelview()
+        val scaleAvg = (Math.abs(mv.sx) + Math.abs(mv.sy)) * 0.5f
+        prepareBlur(blurRadius * scaleAvg.coerceAtLeast(0.0001f))
         val fbo = fboV ?: return
         if (!blurReady) return
         if (!initDraw()) {
@@ -373,21 +405,29 @@ void main() {
         val sh = sr.scaledHeight.toFloat()
         val f = feather.coerceAtLeast(0.5f)
 
-        val uLeft = x / sw
-        val uRight = (x + w) / sw
-        val vBottom = 1f - (y + h) / sh
-        val vTop = 1f - y / sh
-        val featherU = f / sw
-        val featherV = f / sh
+        // Effective on-screen rect after current modelview (scale+translate).
+        val ex = x * mv.sx + mv.tx
+        val ey = y * mv.sy + mv.ty
+        val ew = w * mv.sx
+        val eh = h * mv.sy
+        val fex = f * mv.sx
+        val fey = f * mv.sy
+
+        val uLeft = ex / sw
+        val uRight = (ex + ew) / sw
+        val vBottom = 1f - (ey + eh) / sh
+        val vTop = 1f - ey / sh
+        val featherU = fex / sw
+        val featherV = fey / sh
 
         val ox = x - f
         val oy = y - f
         val ow = w + f * 2
         val oh = h + f * 2
-        val ou0 = ox / sw
-        val ov0 = 1f - (oy + oh) / sh
-        val ou1 = (ox + ow) / sw
-        val ov1 = 1f - oy / sh
+        val ou0 = (ox * mv.sx + mv.tx) / sw
+        val ov0 = 1f - ((oy + oh) * mv.sy + mv.ty) / sh
+        val ou1 = ((ox + ow) * mv.sx + mv.tx) / sw
+        val ov1 = 1f - (oy * mv.sy + mv.ty) / sh
 
         GL20.glUseProgram(drawProgram)
         GL20.glUniform1i(drawTexLoc, 0)
